@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 30 40% 99%;
+  --foreground: 0 0% 10%;
+}
+
+body {
+  @apply bg-background text-foreground;
+  font-feature-settings: "liga" 1, "calt" 1;
+}

@@ -1,0 +1,30 @@
+from functools import lru_cache
+from pathlib import Path
+from typing import Optional
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+
+    database_url: str = "sqlite:///./recipefy.db"
+    storage_dir: Path = Path("storage")
+    openai_api_key: Optional[str] = None
+    scan_vision_model: str = "gpt-4o"
+    scan_fallback_model: Optional[str] = "gpt-4o-mini"
+    scan_max_output_tokens: Optional[int] = 800
+    scan_max_image_edge: int = 1600
+    scan_jpeg_quality: int = 80
+    scan_retry_attempts: int = 2
+    scan_retry_delay_seconds: float = 1.5
+    google_vision_api_key: Optional[str] = None
+    assistant_model_priority: str = "gpt-4o,gpt-4o-mini,o4-mini"
+    assistant_disable_finder_ai: bool = False
+
+
+@lru_cache
+def get_settings() -> Settings:
+    settings = Settings()
+    settings.storage_dir.mkdir(parents=True, exist_ok=True)
+    return settings

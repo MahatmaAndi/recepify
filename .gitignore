@@ -1,0 +1,5 @@
+backend/.venv/
+backend/.env
+backend/.env.save
+frontend/node_modules/
+backend/venv/
