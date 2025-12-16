@@ -10,9 +10,18 @@ from .database import init_db
 app = FastAPI(title="Recipefy API", version="0.1.0")
 settings = get_settings()
 
+default_cors_origins = {"http://localhost:3000"}
+if settings.frontend_origins:
+    extra_origins = [
+        origin.strip().rstrip("/")
+        for origin in settings.frontend_origins.split(",")
+        if origin.strip()
+    ]
+    default_cors_origins.update(extra_origins)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=list(default_cors_origins),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

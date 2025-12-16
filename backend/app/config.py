@@ -10,6 +10,7 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite:///./recipefy.db"
     storage_dir: Path = Path("storage")
+    frontend_origins: Optional[str] = None
     openai_api_key: Optional[str] = None
     scan_vision_model: str = "gpt-4o"
     scan_fallback_model: Optional[str] = "gpt-4o-mini"
