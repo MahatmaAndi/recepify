@@ -27,7 +27,7 @@ export function ScanRecipe({ onBack, onScanComplete }: ScanRecipeProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewObjectUrl, setPreviewObjectUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { progress, message } = useImportProgress(isScanning, scanProgressStages, scanInitialStage);
+  const { message } = useImportProgress(isScanning, scanProgressStages, scanInitialStage);
 
   useEffect(() => {
     return () => {
