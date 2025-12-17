@@ -45,6 +45,9 @@ import {
   type ShoppingListItemPayload,
 } from "@/lib/api";
 
+const OWNER_TAG_PREFIX = "owner:";
+const buildOwnerTag = (email: string) => `${OWNER_TAG_PREFIX}${email.trim().toLowerCase()}`;
+
 type AppTab = "home" | "import" | "myRecipes" | "shoppingList" | "profile";
 
 const tabToScreen: Record<AppTab, Screen> = {
@@ -223,10 +226,11 @@ const mapApiRecipeToFigma = (apiRecipe: ApiRecipe | RecipeReadPayload): Recipe =
   const sanitizedTags = (apiRecipe.tags ?? [])
     .map((tag) => (tag ?? "").trim().toLowerCase())
     .filter((tag) => tag.length > 0 && !tag.startsWith("#"));
+  const visibleTags = sanitizedTags.filter((tag) => !tag.startsWith(OWNER_TAG_PREFIX));
   const normalizedSpeedTag = (speedTag ?? "").toLowerCase().trim();
-  const tags = normalizedSpeedTag && !sanitizedTags.includes(normalizedSpeedTag)
-    ? [...sanitizedTags, normalizedSpeedTag]
-    : sanitizedTags;
+  const tags = normalizedSpeedTag && !visibleTags.includes(normalizedSpeedTag)
+    ? [...visibleTags, normalizedSpeedTag]
+    : visibleTags;
 
   return {
     id: apiRecipe.id,
@@ -254,12 +258,16 @@ const mapApiRecipeToFigma = (apiRecipe: ApiRecipe | RecipeReadPayload): Recipe =
   };
 };
 
-const mapFigmaRecipeToApiPayload = (recipe: Recipe): ImportedRecipePayload => {
+const mapFigmaRecipeToApiPayload = (recipe: Recipe, ownerTag?: string): ImportedRecipePayload => {
   const sanitizeString = (value?: string | null) => (value?.trim() ? value : null);
   const normalizedSource = recipe.source ?? "web";
   const safeTags = (recipe.tags ?? [])
     .map((tag) => (tag ?? "").trim().toLowerCase())
     .filter((tag): tag is string => Boolean(tag));
+  const tagSet = new Set(safeTags);
+  if (ownerTag) {
+    tagSet.add(ownerTag);
+  }
 
   return {
     title: recipe.title || "Untitled Recipe",
@@ -284,7 +292,7 @@ const mapFigmaRecipeToApiPayload = (recipe: Recipe): ImportedRecipePayload => {
     mediaVideoUrl: recipe.videoUrl ?? null,
     mediaImageUrl: recipe.thumbnail ?? null,
     mediaLocalPath: null,
-    tags: safeTags,
+    tags: Array.from(tagSet),
     ingredients: recipe.ingredients.map((ingredient) => ({
       line: ingredient.line?.trim() || formatIngredientText(ingredient),
       amount: ingredient.amount ?? null,
@@ -412,8 +420,8 @@ export function FigmaExperience() {
     setShoppingListItems([]);
     setIsAuthenticated(true);
     persistIdentity(name, email);
-    setActiveTab("profile");
-    setScreen("profile");
+    setActiveTab("home");
+    setScreen("home");
   };
 
   const handleLogout = () => {
@@ -439,7 +447,7 @@ export function FigmaExperience() {
   }, []);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !userEmail) {
       return;
     }
     let isMounted = true;
@@ -450,10 +458,19 @@ export function FigmaExperience() {
         if (!isMounted) {
           return;
         }
-        if (apiRecipes.length) {
-          const mapped = apiRecipes.map(mapApiRecipeToFigma);
+        const ownerTag = buildOwnerTag(userEmail);
+        const filtered = apiRecipes.filter((recipe) =>
+          (recipe.tags ?? []).some(
+            (tag) => typeof tag === "string" && tag.trim().toLowerCase() === ownerTag
+          )
+        );
+        if (filtered.length) {
+          const mapped = filtered.map(mapApiRecipeToFigma);
           setRecipes(mapped);
           setSelectedRecipe(mapped[0] ?? null);
+        } else {
+          setRecipes([]);
+          setSelectedRecipe(null);
         }
       } catch (error) {
         console.error("Failed to load recipes", error);
@@ -472,7 +489,7 @@ export function FigmaExperience() {
     return () => {
       isMounted = false;
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, userEmail]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -541,9 +558,20 @@ export function FigmaExperience() {
   };
 
   const persistImportedRecipe = async (payload: ImportedRecipePayload) => {
+    const ownerTag = userEmail ? buildOwnerTag(userEmail) : undefined;
+    const normalizedTags = Array.from(
+      new Set(
+        (payload.tags ?? [])
+          .map((tag) => (tag ?? "").trim().toLowerCase())
+          .filter((tag): tag is string => Boolean(tag))
+      )
+    );
+    if (ownerTag && !normalizedTags.includes(ownerTag)) {
+      normalizedTags.push(ownerTag);
+    }
     const normalizedPayload: ImportedRecipePayload = {
       ...payload,
-      tags: payload.tags ?? [],
+      tags: normalizedTags,
       ingredients: payload.ingredients ?? [],
       instructions: payload.instructions ?? [],
       importedAt: payload.importedAt ?? new Date().toISOString(),
@@ -647,7 +675,8 @@ export function FigmaExperience() {
   };
 
   const persistRecipeUpdate = async (recipeToSave: Recipe): Promise<Recipe> => {
-    const payload = mapFigmaRecipeToApiPayload(recipeToSave);
+    const ownerTag = userEmail ? buildOwnerTag(userEmail) : undefined;
+    const payload = mapFigmaRecipeToApiPayload(recipeToSave, ownerTag);
     const savedRecipe = await updateRecipeApi(recipeToSave.id, payload);
     const mappedRecipe = mapApiRecipeToFigma(savedRecipe);
     applyRecipeUpdateToState(mappedRecipe);
