@@ -79,8 +79,10 @@ interface ImportItemCardProps {
 
 function ImportItemCard({ item, timeAgo, onAction }: ImportItemCardProps) {
   const statusMeta = getStatusMeta(item);
+  const isReady = item.status === "ready";
+  const isProcessing = item.status === "processing";
   const handlePrimary = () => {
-    if (item.status === "ready") {
+    if (isReady) {
       onAction("open");
     } else if (item.status === "needsConnection") {
       onAction("connect");
@@ -126,9 +128,9 @@ function ImportItemCard({ item, timeAgo, onAction }: ImportItemCardProps) {
       <div className="border-t border-gray-100 bg-gray-50 px-4 py-3 flex items-center gap-2">
         <button
           onClick={handlePrimary}
-          disabled={item.status === "processing"}
+          disabled={isProcessing}
           className={`inline-flex flex-1 items-center justify-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium transition ${
-            item.status === "processing" ? "bg-gray-200 text-gray-500 cursor-not-allowed" : "bg-black text-white hover:bg-gray-900"
+            isProcessing ? "bg-gray-200 text-gray-500 cursor-not-allowed" : "bg-black text-white hover:bg-gray-900"
           }`}
         >
           <Download className="w-4 h-4" />
