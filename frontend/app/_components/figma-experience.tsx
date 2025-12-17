@@ -210,7 +210,7 @@ const mapApiRecipeToFigma = (apiRecipe: ApiRecipe | RecipeReadPayload): Recipe =
     } else if (candidateMinutes <= 60) {
       speedTag = "medium (30-60 min)";
     } else {
-      speedTag = "long (>60 min)";
+      speedTag = undefined;
     }
   }
   const sanitizedTags = (apiRecipe.tags ?? [])
