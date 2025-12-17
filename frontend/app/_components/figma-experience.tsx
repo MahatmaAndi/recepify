@@ -18,7 +18,6 @@ import { RecipeDetail } from "@/components/figma/RecipeDetail";
 import { RecipeEdit } from "@/components/figma/RecipeEdit";
 import { RecordVoiceRecipe } from "@/components/figma/RecordVoiceRecipe";
 import { ShoppingList } from "@/components/figma/ShoppingList";
-import { figmaRecipes } from "@/lib/figma-data";
 import type {
   ImportItem,
   Recipe,
@@ -335,8 +334,8 @@ export function FigmaExperience() {
   const [screen, setScreen] = useState<Screen>("home");
   const [detailReturnScreen, setDetailReturnScreen] = useState<Screen>("home");
   const [editReturnScreen, setEditReturnScreen] = useState<Screen>("recipeDetail");
-  const [recipes, setRecipes] = useState<Recipe[]>(() => [...figmaRecipes]);
-  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(figmaRecipes[0] ?? null);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [myRecipesTagFilter, setMyRecipesTagFilter] = useState<string | null>(null);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
   const [cookModeRecipe, setCookModeRecipe] = useState<Recipe | null>(null);
@@ -407,6 +406,10 @@ export function FigmaExperience() {
   const handleLogin = ({ name, email }: { name: string; email: string }) => {
     setUserName(name);
     setUserEmail(email);
+    setRecipes([]);
+    setSelectedRecipe(null);
+    setImportItems([]);
+    setShoppingListItems([]);
     setIsAuthenticated(true);
     persistIdentity(name, email);
     setActiveTab("profile");
@@ -990,7 +993,7 @@ export function FigmaExperience() {
       case "recipeEdit":
         return (
           <RecipeEdit
-            recipe={editingRecipe || selectedRecipe || recipes[0]}
+            recipe={editingRecipe || selectedRecipe || recipes[0] || createDraftRecipe("New Recipe", "web")}
             onBack={() => goToScreen(editReturnScreen)}
             onSave={handleRecipeSave}
           />
