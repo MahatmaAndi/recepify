@@ -3,7 +3,9 @@
 Recipefy importiert Rezepte aus Web, TikTok und Pinterest, speichert sie als einheitliche Datensätze und zeigt sie in einem modernen UI an. Dieses Repository enthält:
 
 - **backend/** – FastAPI + SQLite + Storage für Medien  
-- **frontend/** – Next.js (App Router) + Tailwind + shadcn/ui Komponenten  
+- **apps/web/** – Next.js (App Router) + Tailwind + shadcn/ui Komponenten  
+- **apps/mobile/** – Expo/React Native Client (iOS/Android)  
+- **packages/shared/** – Wiederverwendbare TypeScript-Module (Konstanten, API-Client, Hooks)  
 - **figma/** – (vom Nutzer bereitgestellt) Design-Referenzen für das finale UI
 
 > 🎯 Aktueller Stand: Grundgerüst ist lauffähig (CRUD-Endpunkte, Routen, Screens). Import-Services sind als Platzhalter angelegt und werden mit den vorhandenen Colab-Skripten befüllt.
@@ -20,10 +22,11 @@ backend/
   storage/          # Medienablage (wird automatisch erstellt)
   pyproject.toml
   requirements.txt
-frontend/
-  app/              # Next.js App Router Screens
-  components/       # UI-Bausteine (Tailwind + shadcn patterns)
-  types/            # Shared client-side Types
+apps/
+  web/              # Next.js App Router Screens + Komponenten
+  mobile/           # Expo/React-Native App (greift auf shared package zu)
+packages/
+  shared/           # lib/, constants/, types/ die beide Clients importieren
 README.md
 ```
 
@@ -47,15 +50,22 @@ uvicorn app.main:app --reload
 
 Standard-URL: `http://127.0.0.1:8000`. Die CRUD-API liegt unter `/api/recipes`, Import-Endpoints unter `/api/import/...` (liefern aktuell HTTP 501 bis die Skripte portiert sind).
 
-## Frontend starten
+## Frontend (Web) starten
 
 ```bash
-cd frontend
-npm install
-npm run dev
+npm install          # einmalig aus Repository-Root
+npm run dev:web
 ```
 
 Frontend läuft auf `http://localhost:3000` und kommuniziert via CORS mit dem Backend. Alle Screens (Home, Add, Detail, Edit, Settings, Onboarding, Splash) sind bereits als Platzhalter vorhanden, inklusive Layout/Typografie laut Figma-Vorgabe (helle, minimalistische Oberfläche).
+
+## Mobile App (Expo) starten
+
+```bash
+npm run dev:mobile
+```
+
+Die Expo CLI öffnet einen QR-Code (Expo Go App) oder startet iOS-/Android-Simulatoren. Das UI nutzt dieselben Datentypen und Helper aus `packages/shared` wie das Web-Frontend – Änderungen an API-Clients, Konvertern oder Konstanten müssen nur einmal implementiert werden.
 
 ## Persistenz mit Supabase
 
@@ -84,7 +94,7 @@ Die Next.js App nutzt Supabase Auth für die Anmeldung. Richte folgende Schritte
 1. In Supabase → *Authentication → URL configuration* die `SITE_URL` z.B. auf `http://localhost:3000` setzen.
 2. Unter *Providers* Google und Apple aktivieren (Client-ID/Secret eintragen).
 3. Unter *Email templates* sicherstellen, dass Magic Links aktiviert sind.
-4. In `frontend/.env.local` zwei Variablen setzen:
+4. In `apps/web/.env.local` zwei Variablen setzen:
    ```
    NEXT_PUBLIC_SUPABASE_URL=https://<project>.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
@@ -98,9 +108,9 @@ Danach erscheint vor der App ein Login-Screen mit „Continue with Google/Apple�
 1. **Repo vorbereiten** – das Build-Directory `.next/` und lokale Datenbanken sind jetzt in `.gitignore` hinterlegt, daher genügt ein `git status`, um nur echte Änderungen zu sehen. Vor jedem Push einmal `npm run lint && npm run build` laufen lassen.
 2. **Commit & Push** – falls das Repo noch nicht verbunden ist: `git remote add origin <github-url>` und `git push -u origin main`. Secrets (`.env`, `.env.local`) bleiben lokal.
 3. **Vercel einrichten**
-   - Auf [vercel.com](https://vercel.com) „New Project → Import Git Repo“, `Recepify/frontend` als Root Directory wählen.
-   - Install Command `npm install`, Build Command `npm run build`, Output `.next`.
-   - Unter „Environment Variables“ alle Werte aus `frontend/.env.local` sowie benötigte Backend-URLs eintragen.
+   - Auf [vercel.com](https://vercel.com) „New Project → Import Git Repo“, `Recepify/apps/web` als Root Directory wählen.
+   - Install Command `npm install`, Build Command `npm run build:web`, Output `.next`.
+   - Unter „Environment Variables“ alle Werte aus `apps/web/.env.local` sowie benötigte Backend-URLs eintragen.
 4. **Deploys verifizieren** – nach dem ersten Deploy prüft Vercel Preview/Production automatisch jeden neuen Push. Fehlerhafte Builds lassen sich über das Dashboard einsehen (Logs + Rollbacks).
 
 Optional kannst du ein `vercel env pull .env.local` nutzen, sobald Vercel die Variablen verwaltet.

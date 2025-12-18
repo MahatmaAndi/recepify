@@ -1,11 +1,17 @@
 .DS_Store
 
 # Frontend build artifacts & deps
-frontend/.next/
-frontend/node_modules/
-frontend/.env
-frontend/.env.*
-frontend/.vercel
+apps/web/.next/
+apps/web/node_modules/
+apps/web/.env
+apps/web/.env.*
+apps/web/.vercel
+
+# Expo mobile artifacts
+apps/mobile/.expo/
+apps/mobile/.expo-shared/
+apps/mobile/node_modules/
+apps/mobile/dist/
 
 # Backend environments & local artifacts
 backend/.venv/
@@ -20,3 +26,6 @@ backend/recipefy.db
 .env.*
 backend/recommended/
 backend/recommended/
+
+# Workspace root dependencies
+node_modules/
