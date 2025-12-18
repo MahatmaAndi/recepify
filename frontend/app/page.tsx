@@ -5,5 +5,12 @@ import { LoginScreen } from "@/components/figma/LoginScreen";
 
 export default function LandingPage() {
   const router = useRouter();
-  return <LoginScreen onContinue={() => router.push("/home")} />;
+  return (
+    <LoginScreen
+      onSubmit={(payload) => {
+        void payload;
+        router.push("/home");
+      }}
+    />
+  );
 }
