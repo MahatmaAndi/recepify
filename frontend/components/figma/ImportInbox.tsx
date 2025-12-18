@@ -79,10 +79,9 @@ interface ImportItemCardProps {
 
 function ImportItemCard({ item, timeAgo, onAction }: ImportItemCardProps) {
   const statusMeta = getStatusMeta(item);
-  const isReady = item.status === "ready";
   const isProcessing = item.status === "processing";
   const handlePrimary = () => {
-    if (isReady) {
+    if (item.status === "ready") {
       onAction("open");
     } else if (item.status === "needsConnection") {
       onAction("connect");

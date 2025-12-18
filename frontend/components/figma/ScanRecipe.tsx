@@ -27,7 +27,7 @@ export function ScanRecipe({ onBack, onScanComplete }: ScanRecipeProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewObjectUrl, setPreviewObjectUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { message } = useImportProgress(isScanning, scanProgressStages, scanInitialStage);
+  const { progress, message } = useImportProgress(isScanning, scanProgressStages, scanInitialStage);
 
   useEffect(() => {
     return () => {
@@ -90,10 +90,20 @@ export function ScanRecipe({ onBack, onScanComplete }: ScanRecipeProps) {
                 unoptimized
               />
               {isScanning && (
-                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                  <div className="bg-white rounded-xl px-6 py-4 flex items-center gap-3 shadow-lg">
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span className="font-medium text-sm text-gray-900">{message || "Scanning recipe..."}</span>
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center px-4">
+                  <div className="bg-white rounded-xl px-6 py-4 flex flex-col gap-3 shadow-lg w-full max-w-sm">
+                    <div className="flex items-center gap-3">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span className="font-medium text-sm text-gray-900">
+                        {message || "Scanning recipe..."}
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-black transition-all"
+                        style={{ width: `${Math.min(Math.max(progress ?? 0, 0), 100)}%` }}
+                      />
+                    </div>
                   </div>
                 </div>
               )}
